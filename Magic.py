@@ -210,6 +210,11 @@ class Game:
                             input()
                 elif command[0] == 'h':
                     self.introduce()
+                elif command[0] == 'r':
+                    print('\033c')
+                    for i in self.record:
+                        print(i)
+                    input()
                 elif command[0] == 'm':
                     if self.p[self.current].moveable:
                         if self.move():
@@ -446,6 +451,7 @@ class Game:
             if self.p[self.opposite].tramp[0]:
                 print('咔哒，触发对方陷阱:防备')
                 print('对方护甲增加')
+                self.record.append(self.p[self.current].name+'触发'+self.p[self.opposite].name+'防备')
                 self.p[self.opposite].defense += 2
                 self.p[self.opposite].tramp[0] = 0
                 self.p[self.opposite].armorandtramps-=1
@@ -453,6 +459,7 @@ class Game:
             if (loc in self.p[self.opposite].tramp[1]):
                 print('咔，轰！')
                 print('你中了对方的暗雷！')
+                self.record.append(self.p[self.current].name+'中了'+self.p[self.opposite].name+'的雷')
                 self.p[self.current].hp -= 5
                 self.p[self.opposite].tramp[1].remove(loc)
                 self.p[self.opposite].armorandtramps-=1
@@ -557,6 +564,15 @@ class Game:
         loc = tuple(loc)
         if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not (loc == self.p[self.opposite].locate))):
             self.p[self.current].locate = loc
+            if (loc in self.p[self.opposite].tramp[1]):
+                print('咔，轰！')
+                print('你中了对方的暗雷！')
+                self.record.append(self.p[self.current].name+'中了'+self.p[self.opposite].name+'的雷')
+                self.p[self.current].hp -= 5
+                self.p[self.opposite].tramp[1].remove(loc)
+                self.p[self.opposite].armorandtramps-=1
+                self.ifsuccess()
+                input()
             self.p[self.current].buff[0][1] = 1
             self.setback()
             return 1
@@ -708,6 +724,15 @@ class Game:
                 loc = tuple(loc)
                 if not loc == self.p[self.opposite].locate:
                     self.p[self.current].locate = loc
+                    if (loc in self.p[self.opposite].tramp[1]):
+                        print('咔，轰！')
+                        print('你中了对方的暗雷！')
+                        self.record.append(self.p[self.current].name+'中了'+self.p[self.opposite].name+'的雷')
+                        self.p[self.current].hp -= 5
+                        self.p[self.opposite].tramp[1].remove(loc)
+                        self.p[self.opposite].armorandtramps-=1
+                        self.ifsuccess()
+                        input()
                     self.setback()
                     return 1
                 else:
@@ -1086,6 +1111,80 @@ class Game:
         self.p[self.current].armorandtramps+=1
         self.p[self.current].tramp[3] = 1
         return 1
+    
+    def gale(self):
+        name=input('选择目标？')
+        target=0
+        if n ==self.p[self.current].name:target=self.current
+        elif n ==self.p[self.opposite].name:target=self.opposite
+        else:
+            return 0
+        
+        loc = self.p[self.target].locate
+        ran=1
+        for i in range(loc[0] - ran, loc[0] + ran+1):
+            if i in range(0, 7):
+                self.board[(i, loc[1])] = Fore.LIGHTCYAN_EX+self.board[i, loc[1]]
+        for i in range(loc[1] - ran, loc[1] + ran+1):
+            if i in range(0, 7):
+                self.board[(loc[0], i)] = Fore.LIGHTCYAN_EX+self.board[loc[0], i]
+        self.board[loc] = self.p[self.current].symbol
+        self.printboard()
+        print('大风来！')
+        
+        dire = input('方向:')
+        if dire == '':
+            self.setback()
+            return 0
+        dire = input('方向:')
+        dis = 1
+        if (dire == ''):
+            self.setback()
+            return 0
+        dire = int(dire))
+        loc = list(loc)
+        if dire == 2:
+            loc[0] -= dis
+        elif dire == 4:
+            loc[1] -= dis
+        elif dire == 8:
+            loc[0] += dis
+        elif dire == 6:
+            loc[1] += dis
+        else:
+            self.setback()
+            return 0
+        loc = tuple(loc)
+        if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not loc == self.p[self.opposite].locate) & (not loc == self.p[self.current].locate)):
+            
+            self.p[self.target].locate = loc
+            if target==self.current:
+                if loc in self.p[self.opposite].tramp[1]:
+                    print('咔，轰！')
+                    print('你中了对方的暗雷！')
+                    self.record.append(self.p[self.current].name+'中了'+self.p[self.opposite].name+'的雷')
+                    self.p[self.current].hp -= 5
+                    self.p[self.opposite].tramp[1].remove(loc)
+                    self.p[self.opposite].armorandtramps-=1
+                    self.ifsuccess()
+                    input()
+            if target==self.opposite:
+                if loc in self.p[self.current].tramp[1]:
+                    print('咔，轰！')
+                    print('对方中了你的暗雷！')
+                    self.record.append(self.p[self.opposite].name+'中了'+self.p[self.current].name+'的雷')
+                    self.p[self.opposite].hp -= 5
+                    self.p[self.current].tramp[1].remove(loc)
+                    self.p[self.current].armorandtramps-=1
+                    self.ifsuccess()
+                    input()
+            self.setback()
+            return 1
+        else:
+            self.setback()
+            return 0
+            
+       
         
 game = Game()
 while not game.end:
