@@ -2,7 +2,7 @@
 from colorama import init,Back,Fore,Style
 import time
 import random
-
+import os
 
 class card:
     def __init__(self, numb, name, attr, func,istramp):
@@ -46,25 +46,15 @@ class Game:
         self.max_hp = 20
         self.start_defence = 0
         
-        #buff:[火焰加成，风暴加成]，冰冻，弱化，沉默，流血，霸体
+        #buff:[火焰加成，风暴加成]，冰冻，弱化，沉默，流血，霸体，助燃
         #armor:无尽剑，荼毒匕首
         #tramp:防备，地雷，光明磊落，大地之盾
         #禁卡:无尽剑，五连火球术，风刃2，1
 
         print('\033c', end='')
+        
         self.current, self.opposite = 0, 1
-        print(Back.LIGHTWHITE_EX+Fore.BLACK+Style.DIM+'法术大乱斗')
-        self.p = [
-            player(self.symbol[1], input(self.color[self.current]+'玩家1名字:'), (0, 0), [[0,0],0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
-                   [0, [],0,0],[],0),   
-            player(self.symbol[2], input(self.color[self.opposite]+'玩家2名字:'), (6, 6), [[0,0],0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
-                   [0, [],0,0],[],0)]
-                   
         
-        print('\033c')
-        
-        print(self.bgcolor[self.current]+Fore.BLACK+'%s的回合...' % self.p[self.current].name)
-        input()
         self.Card = [card(0, '火球术  ', 'fire', self.fireball,False),
                      card(1, '疾电闪行 ', 'storm', self.flashmove,False),
                      card(2, '火球术  ', 'fire', self.fireball,False),
@@ -75,7 +65,7 @@ class Game:
                      card(7, '旋风斩  ', 'hit', self.whirlwind,False),
                      card(8, '火球术  ', 'fire', self.fireball,False),
                      card(9, '火球术  ', 'fire', self.fireball,False),
-                     card(10, '火球术  ', 'fire', self.fireball,False),
+                     card(10, '重拳出击 ', 'hit', self.punchhard,False),
                      card(11, '冰锥   ', 'ice', self.cone,False),
                      card(12, '虚弱诅咒 ', 'dark', self.weaken,False),
                      card(13, '停战协议 ', 'buff', self.silence,False),
@@ -101,39 +91,99 @@ class Game:
         self.deck = []
         self.discard = []
         self.record = []
-        self.currentcard = len(self.Card)
+        
         self.bannedcard = [20, 21,26,27]
         self.toolcard=[26,27]
-        for i in range(0, self.currentcard):
-            self.deck.append(i)
-        random.shuffle(self.deck)
-        for i in range(0, 4):
-            flag=True
-            while flag:
-                a=self.deck.pop()
-                if a in self.bannedcard:
-                    self.currentcard -= 1
-                    self.discard.append(a)
-                    continue
-                else:
-                    flag=False
-                self.p[0].cih.append(a)
-                self.currentcard -= 1
-        for i in range(0, 4):
-            flag=True
-            while flag:
-                a=self.deck.pop()
-                if a in self.bannedcard:
-                    self.currentcard -= 1
-                    self.discard.append(a)
-                    continue
-                else:
-                    flag=False
-                self.p[1].cih.append(a)
-                self.currentcard -= 1
         
         self.board = dict()
+        flag=True
+        while flag:
+            print(Back.LIGHTWHITE_EX+Fore.BLACK+Style.DIM+'法术大乱斗')
+            flag=False
+            inp=int(input('1.开始新的游戏\n2.继续以前的游戏\n3.查看存档列表\n4.清理存档\n'))
+            if inp==4:
+                rmname=input('你想要清除哪个存档？')
+                os.system('rm ./MagicFile/'+rmname+'sys.txt')
+                os.system('rm ./MagicFile/'+rmname+'pla.txt')
+                input()
+                print('\033c')
+                flag=True
+                continue
+            elif inp==3:
+                os.system('cd MagicFile\nls')
+                input()
+                print('\033c')
+                flag=True
+                continue
+            elif inp==2:
+                self.gamename=input('存档名:')
+                self.p = [
+                player(self.symbol[1], '', (0, 0), [[0,0],0,0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
+                       [0, [],0,0],[],0),   
+                player(self.symbol[2], '', (6,6), [[0,0],0,0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
+                       [0, [],0,0],[],0)]
+                self.read(self.gamename)
+                self.currentcard = len(self.deck)
+            elif inp==1:
+                self.gamename=input('本局名称:')
+                flag=True
+                while flag:
+                    flag=False
+                    if os.path.isfile('./MagicFile/'+self.gamename+'sys.txt'):
+                        inp=input('该存档已存在，是否覆盖？')
+                        if inp=='n':
+                            self.gamename=input('输入存档名')
+                            flag=True
+                        
+                self.p = [
+                player(self.symbol[1], input(self.color[self.current]+'玩家1名字:'), (0, 0), [[0,0],0,0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
+                       [0, [],0,0],[],0),   
+                player(self.symbol[2], input(self.color[self.opposite]+'玩家2名字:'), (6,6), [[0,0],0,0,0,0,0,0], self.max_hp, self.start_defence, [0,0],
+                       [0, [],0,0],[],0)]
+                self.currentcard = len(self.Card)
+                for i in range(0, self.currentcard):
+                    self.deck.append(i)
+                random.shuffle(self.deck)
+                
+            
+                for i in range(0, 4):
+                    flag=True
+                    while flag:
+                        a=self.deck.pop()
+                        if a in self.bannedcard:
+                            self.currentcard -= 1
+                            self.discard.append(a)
+                            flag=True
+                            continue
+                        else:
+                            flag=False
+                        self.p[0].cih.append(a)
+                        self.currentcard -= 1
+                for i in range(0, 4):
+                    flag=True
+                    while flag:
+                        a=self.deck.pop()
+                        if a in self.bannedcard:
+                            self.currentcard -= 1
+                            self.discard.append(a)
+                            flag=True
+                            continue
+                        else:
+                            flag=False
+                        self.p[1].cih.append(a)
+                        self.currentcard -= 1
+            else:
+                print('请输入正确的数字')
+                input()
+                print('\033c')
+                flag=True
+                continue
+            
         self.setback()
+        print('\033c')
+        print(self.bgcolor[self.current]+Fore.BLACK+'%s的回合...' % self.p[self.current].name)
+        input()
+        self.save(0,self.gamename)
 
     def introduce(self):
         print('\033c')
@@ -152,6 +202,156 @@ class Game:
     def switchside(self):
         self.current, self.opposite = self.opposite, self.current
 
+    def save(self,suc,name):
+        if not os.path.isdir('./MagicFile'):
+            if os.name=='posix':os.system('mkdir MagicFile')
+            elif os.name=='nt':os.system('md MagicFile')
+            else:print('你用的什么操作系统？java？')
+        with open('./MagicFile/'+name+'sys.txt','w+') as savefile1:
+            for i in self.deck:
+                savefile1.write(str(i)+' ')
+            savefile1.write(' \n')
+            for i in self.discard:
+                savefile1.write(str(i)+' ')
+            savefile1.write(' \n')
+            savefile1.write(str(self.current)+' \n')
+            savefile1.write(str(self.turn)+' \n')
+            for i in self.record:
+                savefile1.writelines(i+' ')
+            
+            if suc:savefile1.write('\n'+self.p[suc-1].name)
+        
+        with open('./MagicFile/'+name+'pla0.txt','w+') as savefile:
+            cu=self.p[0]
+            
+            #name, locate,  hp, defense, armor, tramp, cih,armorandtramps,buff
+            #地雷
+            savefile.write(' '.join([cu.name,str(cu.locate[0]),str(cu.locate[1]),str(cu.hp),str(cu.defense),str(cu.armor[0]),str(cu.armor[1]),str(cu.tramp[0])]))
+            savefile.write(' \n')
+            for i in cu.tramp[1]:
+                savefile.write(str(i[0])+' '+str(i[1])+';')
+            savefile.write(' \n')
+            savefile.write(' '.join([str(cu.tramp[2]),str(cu.tramp[3])]))
+            savefile.write(' \n')
+            for i in cu.cih:
+                savefile.write(str(i)+' ')
+            savefile.write(' \n')
+            
+            savefile.write(' '.join([str(cu.armorandtramps),str(cu.buff[0][0]),str(cu.buff[0][1]),str(cu.buff[1]),str(cu.buff[2]),str(cu.buff[3]),str(cu.buff[4]),str(cu.buff[5]),str(cu.buff[6])]))
+            savefile.write(' \n')
+            
+        with open('./MagicFile/'+name+'pla1.txt','w+') as savefile:
+            op=self.p[1]
+            savefile.write(' '.join([op.name,str(op.locate[0]),str(op.locate[1]),str(op.hp),str(op.defense),str(op.armor[0]),str(op.armor[1]),str(op.tramp[0])]))
+            savefile.write(' \n')
+            for i in op.tramp[1]:
+                savefile.write(str(i[0])+' '+str(i[1])+';')
+            savefile.write(' \n')
+            savefile.write(' '.join([str(op.tramp[2]),str(op.tramp[3])]))
+            savefile.write(' \n')
+            for i in op.cih:
+                savefile.write(str(i)+' ')
+            savefile.write(' \n')
+            
+            savefile.write(' '.join([str(op.armorandtramps),str(op.buff[0][0]),str(op.buff[0][1]),str(op.buff[1]),str(op.buff[2]),str(op.buff[3]),str(op.buff[4]),str(op.buff[5]),str(op.buff[6])]))
+            savefile.write(' \n')
+            
+    def read(self,name):
+        if not os.path.isfile('./MagicFile/'+name+'sys.txt'):
+            print('存档名错误')
+            input()
+            exit()
+        with open('./MagicFile/'+name+'sys.txt','r') as savefile1:
+            re=savefile1.readlines()
+            for i in re[0].split(' '):
+                if not (i=='' or i=='\n'):self.deck.append(int(i))
+            for i in re[1].split(' '):
+                if not (i=='' or i=='\n'):self.discard.append(int(i))
+            for i in re[2].split(' '):
+                if not (i=='' or i=='\n'):
+                    self.current=int(i)
+                    self.opposite=1-self.current
+            for i in re[3].split(' '):
+                if not (i=='' or i=='\n'):self.turn=int(i)
+            for i in re[4].split(' '):
+                if not (i=='' or i=='\n'):self.record.append(i)
+            if len(re)==6:
+                print('该局已经结束\n'+re[5]+'是胜者')
+                input()
+                exit()
+        with open('./MagicFile/'+name+'pla0.txt','r') as savefile:
+            cu=self.p[0]
+            
+            #name, locate,  hp, defense, armor, tramp, cih,armorandtramps,buff
+            #地雷
+            re=savefile.readlines()
+            re1=re[0].split(' ')
+            cu.name=re1[0]
+            cu.locate=(int(re1[1]),int(re1[2]))
+            cu.hp=int(re1[3])
+            cu.defense=int(re1[4])
+            cu.armor[0]=int(re1[5])
+            cu.armor[1]=int(re1[6])
+            cu.tramp[0]=int(re1[7])
+            
+            for i in re[1].split(';'):
+                if not (i=='' or i=='\n' or i==' \n'):
+                    a=i.split(' ')
+                    cu.tramp[1].append((int(a[0]),int(a[1])))
+             
+            re2=re[2].split(' ')
+            cu.tramp[2]=int(re2[0])
+            cu.tramp[3]=int(re2[1])
+            
+            for i in re[3].split(' '):
+                if not (i=='' or i=='\n'):cu.cih.append(int(i))
+            re3=re[4].split(' ')
+            cu.armorandtramps=int(re3[0])
+            cu.buff[0][0]=int(re3[1])
+            cu.buff[0][1]=int(re3[2])
+            cu.buff[1]=int(re3[3])
+            cu.buff[2]=int(re3[4])
+            cu.buff[3]=int(re3[5])
+            cu.buff[4]=int(re3[6])
+            cu.buff[5]=int(re3[7])
+            cu.buff[6]=int(re3[8])
+            self.p[0]=cu
+            
+        with open('./MagicFile/'+name+'pla1.txt','r') as savefile:
+            op=self.p[1]
+            re=savefile.readlines()
+            re1=re[0].split(' ')
+            op.name=re1[0]
+            op.locate=(int(re1[1]),int(re1[2]))
+            op.hp=int(re1[3])
+            op.defense=int(re1[4])
+            op.armor[0]=int(re1[5])
+            op.armor[1]=int(re1[6])
+            op.tramp[0]=int(re1[7])
+            
+            for i in re[1].split(';'):
+                if not (i=='' or i=='\n' or i==' \n'):
+                    a=i.split(' ')
+                    op.tramp[1].append((int(a[0]),int(a[1])))
+             
+            re2=re[2].split(' ')
+            op.tramp[2]=int(re2[0])
+            op.tramp[3]=int(re2[1])
+            
+            for i in re[3].split(' '):
+                if not (i=='' or i=='\n'):op.cih.append(int(i))
+            re3=re[4].split(' ')
+            op.armorandtramps=int(re3[0])
+            op.buff[0][0]=int(re3[1])
+            op.buff[0][1]=int(re3[2])
+            op.buff[1]=int(re3[3])
+            op.buff[2]=int(re3[4])
+            op.buff[3]=int(re3[5])
+            op.buff[4]=int(re3[6])
+            op.buff[5]=int(re3[7])
+            op.buff[6]=int(re3[8])
+            self.p[1]=op
+            
     def startstage(self):
         if self.p[self.current] == self.p[0]:
             self.turn += 1
@@ -197,6 +397,10 @@ class Game:
                     a=int(input('#'))
                     if a in range(0,len(self.Card)):
                         self.p[self.current].cih.append(a)
+                elif command=='save':
+                    self.save(0,self.gamename)
+                    print('存档成功')
+                    input()
                 elif command[0] == '#':
                     if self.p[self.current].buff[3]:
                         print('你被沉默了，无法出卡')
@@ -248,11 +452,12 @@ class Game:
     def endstage(self):
         if self.p[self.current].buff[4]:
             self.p[self.current].hp-=1
+            self.ifsuccess()
             self.p[self.current].buff[4]-=1
             self.record.append(self.color[self.current]+self.p[self.current].name+'流血')
             print('你流血了')
         
-        self.p[self.current].buff = [[0,0],0,0,0,self.p[self.current].buff[4],0]
+        self.p[self.current].buff = [[0,0],0,0,0,self.p[self.current].buff[4],0,0]
         
         while len(self.p[self.current].cih) > 5:
             self.printboard()
@@ -270,6 +475,7 @@ class Game:
         self.switchside()
         print('\033c', end='')
         print(self.bgcolor[self.current]+Fore.BLACK+'%s的回合...' % self.p[self.current].name)
+        self.save(0,self.gamename)
         input()
 
     def printboard(self):
@@ -293,7 +499,8 @@ class Game:
                 else:
                     print()
             
-            print('                         ‖', end='')
+            if not i==6:print('                         ‖', end='')
+            else:print('对方手牌数:%d             ‖'%len(self.p[self.opposite].cih),end='')
             if d > 0:
                 print(self.record[2 * i + 1+d])
             else:
@@ -305,8 +512,8 @@ class Game:
 
         print(self.color[self.current]+self.p[self.current].name + ':HP:%d+%d' % (self.p[self.current].hp, self.p[self.current].defense),
               end='  ')
-        if self.p[self.current].buff[0][0]: print('助燃%d' % self.p[self.current].buff[0][0], end='  ')
-        if self.p[self.current].buff[0][1]:print('风暴', end='  ')
+        if self.p[self.current].buff[6]: print('助燃%d' % self.p[self.current].buff[6], end='  ')
+        if self.p[self.current].buff[0][1]:print('风暴%d'%self.p[self.current].buff[0][1], end='  ')
         if self.p[self.current].buff[1]: print('冰冻', end='  ')
         if self.p[self.current].buff[2]: print('弱化%d' % self.p[self.current].buff[2], end='  ')
         if self.p[self.current].buff[4]: print('流血%d' % self.p[self.current].buff[4], end='  ')
@@ -324,7 +531,7 @@ class Game:
 
         print(self.color[self.opposite]+self.p[self.opposite].name + ':HP:%d+%d' % (self.p[self.opposite].hp, self.p[self.opposite].defense),
               end='  ')
-        if self.p[self.opposite].buff[0][0]: print('助燃%d' % self.p[self.opposite].buff[0][0], end='  ')
+        if self.p[self.opposite].buff[6]: print('助燃%d' % self.p[self.opposite].buff[6], end='  ')
         if self.p[self.opposite].buff[0][1]:print('风暴', end='  ')
         if self.p[self.opposite].buff[1]: print('冰冻', end='  ')
         if self.p[self.opposite].buff[2]: print('弱化%d' % self.p[self.opposite].buff[2], end='  ')
@@ -363,28 +570,39 @@ class Game:
             input()
             print('\033c')
             print('%s获得了最终的胜利✌' % self.p[self.current].name)
+            self.save(self.current+1,self.gamename)
             exit()
+        elif self.p[self.current].hp <= 0:
+            self.setback()
+            self.printboard()
+            print('%s倒在了地上...' % self.p[self.current].name)
+            input()
+            print('\033c')
+            print('%s获得了最终的胜利✌' % self.p[self.opposite].name)
+            self.save(self.opposite+1,self.gamename)
+            exit()
+            
 
     def damagemake(self, damage, attr, *word):
         bu = self.p[self.current].buff
         ar = self.p[self.current].armor
-        tr = self.p[self.current].tramp
+        tr = self.p[self.opposite].tramp
         if damage < 0:
-            if ((bu[0][0]) & (attr == 'fire')):
-                self.p[self.current].buff[0][0] = 0
-            if ((bu[0][1]) & (attr == 'storm')):
-                self.p[self.current].buff[0][1] = 0
+            if ((bu[6]) and (attr == 'fire')):
+                self.p[self.current].buff[6] = 0
+            if ((bu[0][1]) and (attr == 'storm')):
+                pass
             if len(word):
                 print(word[0])
             return 0
         else:
-            if ((bu[0][0]) & (attr == 'fire')):
-                damage += (1 + bu[0][0])
-                self.p[self.current].buff[0][0] = 0
-            if ((bu[0][1]) & (attr == 'storm')):
-                damage += 1
-                self.p[self.current].buff[0][1] = 0
-
+            if ((bu[6]) and (attr == 'fire')):
+                damage += bu[6]*3
+                self.p[self.current].buff[6] = 0
+            if ((bu[0][1]) and (attr == 'storm')):
+                damage += bu[0][1]
+                
+                
             if bu[2]:
                 damage -= bu[2]
             
@@ -398,6 +616,25 @@ class Game:
             if ar[1]:
                 self.p[self.opposite].buff[4]=2
                 ar[1]-=1
+                if self.p[self.opposite].buff[5]:
+                    self.p[self.opposite].buff[4]=0
+                    print(self.color[self.opposite]+'霸体免疫')
+                    self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'霸体免疫')
+                    input()
+                elif self.p[self.opposite].tramp[2]:
+                    self.p[self.opposite].tramp[2]=0
+                    self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '光明磊落被触发')
+                    print('Guang!对手陷阱光明磊落被触发，获得霸体')
+                    self.p[self.opposite].armorandtramps-=1
+                    self.p[self.opposite].buff[5]+=1
+                    self.p[self.opposite].buff[2]=0
+                    self.p[self.opposite].buff[3]=0
+                    self.p[self.opposite].buff[1]=0
+                    self.p[self.opposite].buff[4]=0
+                    input()
+                else:
+                    self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '流血了因为')
+                    
                 if not ar[1]:
                     self.p[self.current].armorandtramps-=1
                 self.p[self.current].armor = ar
@@ -417,7 +654,7 @@ class Game:
                     input()
                     
 
-            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '失去了%dHP因为' % damage)
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '失%dHP因为' % damage)
             if not self.p[self.opposite].defense:
                 self.p[self.opposite].hp -= damage
             else:
@@ -435,7 +672,7 @@ class Game:
         loc = self.p[self.current].locate
         for i in range(loc[0] - 1, loc[0] + 2):
             for j in range(loc[1] - 1, loc[1] + 2):
-                if ((i in range(0, 7)) & (j in range(0, 7)) & (not (loc == self.p[self.opposite].locate))):
+                if ((i in range(0, 7)) and (j in range(0, 7)) and (not (loc == self.p[self.opposite].locate))):
                     self.board[(i, j)] = Fore.LIGHTCYAN_EX+self.board[(i, j)]
         self.board[loc] = self.p[self.current].symbol
         self.printboard()
@@ -449,18 +686,24 @@ class Game:
         if dire == 0:
             return 0
         loc = list(loc)
-        if dire in (1, 4, 7): loc[1] -= 1
-        if dire in (3, 6, 9): loc[1] += 1
-        if dire in (1, 2, 3): loc[0] -= 1
-        if dire in (7, 8, 9): loc[0] += 1
+        if os.name=='posix':
+            if dire in (1, 4, 7): loc[1] -= 1
+            if dire in (3, 6, 9): loc[1] += 1
+            if dire in (1, 2, 3): loc[0] -= 1
+            if dire in (7, 8, 9): loc[0] += 1
+        elif os.name=='nt':
+            if dire in (1, 4, 7): loc[1] -= 1
+            if dire in (3, 6, 9): loc[1] += 1
+            if dire in (7,8,9): loc[0] -= 1
+            if dire in (1,2,3): loc[0] += 1
         loc = tuple(loc)
-        if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not (loc == self.p[self.opposite].locate))):
+        if ((loc[0] in range(0, 7)) and (loc[1] in range(0, 7)) and (not (loc == self.p[self.opposite].locate))):
             self.p[self.current].locate = loc
             if self.p[self.opposite].tramp[0]:
                 print('咔哒，触发对方陷阱:防备')
                 print('对方护甲增加')
                 self.record.append(self.color[self.current]+self.p[self.current].name+'触发'+self.p[self.opposite].name+'防备')
-                self.p[self.opposite].defense += 2
+                self.p[self.opposite].defense += 4
                 self.p[self.opposite].tramp[0] = 0
                 self.p[self.opposite].armorandtramps-=1
                 input()
@@ -477,7 +720,14 @@ class Game:
                     self.p[self.opposite].armorandtramps-=1
                     input()
                     return 1
-                self.p[self.current].hp -= damage
+                if not self.p[self.current].defense:
+                    self.p[self.current].hp -= damage
+                else:
+                    if (self.p[self.current].defense >= damage):
+                        self.p[self.current].defense -= damage
+                    else:
+                        self.p[self.current].hp -= (damage - self.p[self.current].defense)
+                        self.p[self.current].defense = 0
                 self.record.append(self.color[self.current]+self.p[self.current].name+'中了雷失%dHP'%damage)
                 self.p[self.opposite].tramp[1].remove(loc)
                 self.p[self.opposite].armorandtramps-=1
@@ -510,20 +760,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 3
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 3
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 3
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 3
         else:
@@ -535,7 +785,7 @@ class Game:
         return 1
 
     def Combustion(self):
-        self.p[self.current].buff[0][0] += 1
+        self.p[self.current].buff[6] += 1
         self.printboard()
         print('获得助燃buff')
         input()
@@ -548,10 +798,10 @@ class Game:
             return 0
         loc = self.p[self.current].locate
         for i in range(loc[0] - 2, loc[0] + 3):
-            if i in range(0, 7):
+            if ((i in range(0, 7))and(not (i,loc[1]) in [self.p[0].locate,self.p[1].locate])):
                 self.board[(i, loc[1])] = Fore.LIGHTCYAN_EX+self.board[i, loc[1]]
         for i in range(loc[1] - 2, loc[1] + 3):
-            if i in range(0, 7):
+            if ((i in range(0, 7))and(not (loc[0],i) in [self.p[0].locate,self.p[1].locate])):
                 self.board[(loc[0], i)] = Fore.LIGHTCYAN_EX+self.board[loc[0], i]
         self.board[loc] = self.p[self.current].symbol
         self.printboard()
@@ -569,11 +819,11 @@ class Game:
             input()
             return 0
         loc = list(loc)
-        if dire == 2:
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
             loc[0] -= dis
         elif dire == 4:
             loc[1] -= dis
-        elif dire == 8:
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
             loc[0] += dis
         elif dire == 6:
             loc[1] += dis
@@ -581,7 +831,7 @@ class Game:
             self.setback()
             return 0
         loc = tuple(loc)
-        if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not (loc == self.p[self.opposite].locate))):
+        if ((loc[0] in range(0, 7)) and (loc[1] in range(0, 7)) and (not (loc == self.p[self.opposite].locate))):
             self.p[self.current].locate = loc
             if (loc in self.p[self.opposite].tramp[1]):
                 print('咔，轰！')
@@ -604,7 +854,7 @@ class Game:
                 self.p[self.opposite].armorandtramps-=1
                 self.ifsuccess()
                 input()
-            self.p[self.current].buff[0][1] = 1
+            self.p[self.current].buff[0][1] += 1
             self.setback()
             return 1
         else:
@@ -616,11 +866,11 @@ class Game:
         loc = self.p[self.current].locate
         for i in range(loc[0] - 1, loc[0] + 2):
             for j in range(loc[1] - 1, loc[1] + 2):
-                if ((i in range(0, 7)) & (j in range(0, 7))):
+                if ((i in range(0, 7)) and (j in range(0, 7))):
                     if self.board[(i, j)] == self.p[self.opposite].symbol:
                         damage = 2
                         self.board[(i, j)] = Back.LIGHTRED_EX+self.p[self.opposite].symbol
-                    self.board[(i, j)] = Fore.LIGHTRED_EX+self.board[(i, j)]
+                    else:self.board[(i, j)] = Fore.LIGHTRED_EX+self.board[(i, j)]
         self.board[loc] = self.p[self.current].symbol
         self.printboard()
         print('旋风斩！')
@@ -653,20 +903,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 1
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 1
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 1
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 1
         else:
@@ -675,13 +925,23 @@ class Game:
 
         if self.damagemake(damage, 'buff'):
             self.p[self.opposite].buff[1] = 1
-            if self.p[self.opposite].tramp[2]:
+            if self.p[self.opposite].buff[5]:
+                self.p[self.opposite].buff[1]=0
+                print(self.color[self.opposite]+'霸体免疫')
+                self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'霸体免疫')
+                input()
+            elif self.p[self.opposite].tramp[2]:
                 self.p[self.opposite].tramp[2]=0
+                self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '光明磊落被触发')
+                print('Guang!对手陷阱光明磊落被触发，获得霸体')
                 self.p[self.opposite].armorandtramps-=1
                 self.p[self.opposite].buff[5]+=1
+                self.p[self.opposite].buff[2]=0
+                self.p[self.opposite].buff[3]=0
                 self.p[self.opposite].buff[1]=0
                 self.p[self.opposite].buff[4]=0
-            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '被冰冻了因为')
+                input()
+            else:self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '被冰冻了因为')
 
         self.setback()
         return 1
@@ -689,14 +949,48 @@ class Game:
     def weaken(self):
         print('弱化！')
         self.p[self.opposite].buff[2] += 1
-        self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '被弱化了因为')
+        if self.p[self.opposite].buff[5]:
+            self.p[self.opposite].buff[2]=0
+            print(self.color[self.opposite]+'霸体免疫')
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'霸体免疫')
+            input()
+        elif self.p[self.opposite].tramp[2]:
+            self.p[self.opposite].tramp[2]=0
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '光明磊落被触发')
+            print('Guang!对手陷阱光明磊落被触发，获得霸体')
+            self.p[self.opposite].armorandtramps-=1
+            self.p[self.opposite].buff[5]+=1
+            self.p[self.opposite].buff[2]=0
+            self.p[self.opposite].buff[3]=0
+            self.p[self.opposite].buff[1]=0
+            self.p[self.opposite].buff[4]=0
+            input()
+        else:
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '被弱化了因为')
         return 1
 
     def silence(self):
         print('停战！')
         self.p[self.current].buff[3] = 1
         self.p[self.opposite].buff[3] = 1
-        self.record.append('大家被沉默因为')
+        if self.p[self.opposite].buff[5]:
+            self.p[self.opposite].buff[4]=0
+            print(self.color[self.opposite]+'霸体免疫')
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'霸体免疫')
+            input()
+        elif self.p[self.opposite].tramp[2]:
+            self.p[self.opposite].tramp[2]=0
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '光明磊落被触发')
+            print('Guang!对手陷阱光明磊落被触发，获得霸体')
+            self.p[self.opposite].armorandtramps-=1
+            self.p[self.opposite].buff[5]+=1
+            self.p[self.opposite].buff[2]=0
+            self.p[self.opposite].buff[3]=0
+            self.p[self.opposite].buff[1]=0
+            self.p[self.opposite].buff[4]=0
+            input()
+        else:
+            self.record.append('大家被沉默因为')
 
         return 1
 
@@ -705,7 +999,7 @@ class Game:
         loc = self.p[self.current].locate
         for i in range(loc[0] - 3, loc[0] + 4):
             for j in range(loc[1] - 3, loc[1] + 4):
-                if ((i in range(0, 7)) & (j in range(0, 7))):
+                if ((i in range(0, 7)) and (j in range(0, 7))):
                     if self.board[(i, j)] == self.p[self.opposite].symbol: 
                         self.board[(i, j)] = Back.LIGHTRED_EX+self.p[self.opposite].symbol
                     self.board[(i, j)] = Fore.LIGHTRED_EX+self.board[(i, j)]
@@ -715,9 +1009,9 @@ class Game:
         print('追踪导弹！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') & (not dy == '')):
+        if ((not dx == '') and (not dy == '')):
             dx, dy = int(dx), int(dy)
-            if ((dx in range(-3, 4)) & (dx in range(-3, 4))):
+            if ((dx in range(-3, 4)) and (dx in range(-3, 4))):
                 if ((loc[0] + dx, loc[1] + dy) == self.p[self.opposite].locate):
                     damage = 3
             else:
@@ -739,7 +1033,7 @@ class Game:
         loc = self.p[self.current].locate
         for i in range(loc[0] - 3, loc[0] + 4):
             for j in range(loc[1] - 3, loc[1] + 4):
-                if ((i in range(0, 7)) & (j in range(0, 7)) & (not (loc == self.p[self.opposite].locate))):
+                if ((i in range(0, 7)) and (j in range(0, 7)) and (not (loc == self.p[self.opposite].locate))):
                     self.board[(i, j)] = Fore.LIGHTCYAN_EX+self.board[(i, j)]
         self.board[loc] = self.p[self.current].symbol
         self.printboard()
@@ -747,9 +1041,9 @@ class Game:
         print('传送！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') & (not dy == '')):
+        if ((not dx == '') and (not dy == '')):
             dx, dy = int(dx), int(dy)
-            if ((dx in range(-3, 4)) & (dx in range(-3, 4))):
+            if ((dx in range(-3, 4)) and (dx in range(-3, 4))):
                 loc = list(loc)
                 loc[0] += dx
                 loc[1] += dy
@@ -805,16 +1099,16 @@ class Game:
         loc = self.p[self.current].locate
         for i in range(loc[0] - 3, loc[0] + 4):
             for j in range(loc[1] - 3, loc[1] + 4):
-                if ((i in range(0, 7)) & (j in range(0, 7))):
+                if ((i in range(0, 7)) and (j in range(0, 7))):
                     self.board[(i, j)] = Fore.LIGHTRED_EX+self.board[(i, j)]
         self.board[loc] = self.p[self.current].symbol
         self.printboard()
         print('地雷！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') & (not dy == '')):
+        if ((not dx == '') and (not dy == '')):
             dx, dy = int(dx), int(dy)
-            if not ((dx in range(-3, 4)) & (dy in range(-3, 4))):
+            if not ((dx in range(-3, 4)) and (dy in range(-3, 4))):
                 self.setback()
                 return 0
             loc = list(loc)
@@ -822,8 +1116,8 @@ class Game:
             loc[1] += dy
             loc = tuple(loc)
             self.setback()
-            if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not loc == self.p[self.opposite].locate) & (
-                    not loc == self.p[self.current].locate)&(not loc in self.p[self.current].tramp[1])):
+            if ((loc[0] in range(0, 7)) and (loc[1] in range(0, 7)) and (not loc == self.p[self.opposite].locate) and (
+                    not loc == self.p[self.current].locate)and(not loc in self.p[self.current].tramp[1])):
                 self.p[self.current].tramp[1].append(loc)
                 for i in self.p[self.current].tramp[1]:
                     self.board[i] = Fore.LIGHTRED_EX+self.board[i]
@@ -872,20 +1166,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 3
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 3
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 3
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 3
         else:
@@ -951,20 +1245,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 2
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 2
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 2
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 2
         else:
@@ -973,20 +1267,23 @@ class Game:
 
         if self.damagemake(damage, 'ice'):
             if self.p[self.opposite].buff[1]:
+                oppoloc=list(self.p[self.opposite].locate)
                 self.p[self.opposite].hp -= 5
-                if ((dire == 2) & (self.p[self.opposite].locate[0] > 0)):
-                    self.p[self.opposite].locate[0] -= 1
-                elif ((dire == 4) & (self.p[self.opposite].locate[1] > 0)):
-                    self.p[self.opposite].locate[1] -= 1
-                elif ((dire == 6) & (self.p[self.opposite].locate[1] < 6)):
-                    self.p[self.opposite].locate[1] += 1
-                elif ((dire == 8) & (self.p[self.opposite].locate[0] < 6)):
-                    self.p[self.opposite].locate[0] += 1
+                if ((((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt'))) and (self.p[self.opposite].locate[0] > 0)):
+                    oppoloc[0] -= 1
+                elif ((dire == 4) and (self.p[self.opposite].locate[1] > 0)):
+                    oppoloc[1] -= 1
+                elif ((dire == 6) and (self.p[self.opposite].locate[1] < 6)):
+                    oppoloc[1] += 1
+                elif ((((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt'))) and (self.p[self.opposite].locate[0] < 6)):
+                    oppoloc[0] += 1
+                self.p[self.opposite].locate=tuple(oppoloc)
                 self.setback()
                 self.printboard()
                 print('破冰！')
                 self.record.append(self.color[self.opposite]+self.p[self.opposite].name + '被破冰')
                 input()
+            else:self.setback()
         else:
             self.setback()
         return 1
@@ -1032,20 +1329,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 1
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 1
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 1
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 1
         else:
@@ -1078,20 +1375,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 1
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 1
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 1
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 1
         else:
@@ -1102,7 +1399,7 @@ class Game:
         self.p[self.current].cih.append(27)
         self.setback()
         return 1
-    def windblade1(self):#风刃打两根还是三格？
+    def windblade1(self):
         damage = -1
         ran=2
         loc = self.p[self.current].locate
@@ -1124,20 +1421,20 @@ class Game:
             self.setback()
             return 0
         dire = int(dire)
-        if dire == 2:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
                 damage = 1
         elif dire == 4:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
                 damage = 1
-        elif dire == 8:
-            if ((self.p[self.opposite].locate[1] == loc[1]) & (
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
                     self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
                 damage = 1
         elif dire == 6:
-            if ((self.p[self.opposite].locate[0] == loc[0]) & (
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
                     self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
                 damage = 1
         else:
@@ -1168,12 +1465,11 @@ class Game:
         loc = self.p[target].locate
         ran=1
         for i in range(loc[0] - ran, loc[0] + ran+1):
-            if i in range(0, 7):
+            if ((i in range(0, 7))and(not (i,loc[1]) in [self.p[self.current].locate,self.p[self.opposite].locate])):
                 self.board[(i, loc[1])] = Fore.LIGHTCYAN_EX+self.board[i, loc[1]]
         for i in range(loc[1] - ran, loc[1] + ran+1):
-            if i in range(0, 7):
+            if ((i in range(0, 7))and(not (i,loc[1]) in [self.p[self.current].locate,self.p[self.opposite].locate])):
                 self.board[(loc[0], i)] = Fore.LIGHTCYAN_EX+self.board[loc[0], i]
-        self.board[loc] = self.p[target].symbol
         self.printboard()
         print('大风来！')
         
@@ -1185,11 +1481,11 @@ class Game:
             return 0
         dire = int(dire)
         loc = list(loc)
-        if dire == 2:
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
             loc[0] -= dis
         elif dire == 4:
             loc[1] -= dis
-        elif dire == 8:
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
             loc[0] += dis
         elif dire == 6:
             loc[1] += dis
@@ -1197,7 +1493,7 @@ class Game:
             self.setback()
             return 0
         loc = tuple(loc)
-        if ((loc[0] in range(0, 7)) & (loc[1] in range(0, 7)) & (not loc == self.p[self.opposite].locate) & (not loc == self.p[self.current].locate)):
+        if ((loc[0] in range(0, 7)) and (loc[1] in range(0, 7)) and (not loc == self.p[self.opposite].locate) and (not loc == self.p[self.current].locate)):
             
             self.p[target].locate = loc
             if target==self.current:
@@ -1216,7 +1512,14 @@ class Game:
                         return 1
                         
                 
-                    self.p[self.current].hp -= damage
+                    if not self.p[self.current].defense:
+                        self.p[self.current].hp -= damage
+                    else:
+                        if (self.p[self.current].defense >= damage):
+                            self.p[self.current].defense -= damage
+                        else:
+                            self.p[self.current].hp -= (damage - self.p[self.current].defense)
+                            self.p[self.current].defense = 0
                     self.record.append(self.color[self.current]+self.p[self.current].name+'中了雷失%dHP'%damage)
                     
                     self.p[self.opposite].tramp[1].remove(loc)
@@ -1238,7 +1541,14 @@ class Game:
                         input()
                         return 1
                         
-                    self.p[self.current].hp -= damage
+                    if not self.p[self.opposite].defense:
+                        self.p[self.opposite].hp -= damage
+                    else:
+                        if (self.p[self.opposite].defense >= damage):
+                            self.p[self.opposite].defense -= damage
+                        else:
+                            self.p[self.opposite].hp -= (damage - self.p[self.opposite].defense)
+                            self.p[self.opposite].defense = 0
                     self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'中了雷失%dHP'%damage)
                     
                     self.p[self.current].tramp[1].remove(loc)
@@ -1250,9 +1560,62 @@ class Game:
         else:
             self.setback()
             return 0
-            
+    def punchhard(self):
+        loc = self.p[self.current].locate
+        ran=1
+        for i in range(loc[0] - ran, loc[0] + ran+1):
+            if i in range(0, 7):
+                if (i,loc[1])==self.p[self.opposite].locate:self.board[(i, loc[1])] =Back.LIGHTRED_EX+self.p[self.opposite].symbol
+                else:self.board[(i, loc[1])] = Fore.LIGHTRED_EX+self.board[i, loc[1]]
+        for i in range(loc[1] - ran, loc[1] + ran+1):
+            if i in range(0, 7):
+                if (loc[0],i)==self.p[self.opposite].locate:self.board[(loc[0],i)] =Back.LIGHTRED_EX+self.p[self.opposite].symbol
+                else:
+                    self.board[(loc[0], i)] = Fore.LIGHTRED_EX+self.board[loc[0], i]
+        self.board[loc] = self.p[self.current].symbol
+        self.printboard()
+        print('重拳出击！')
        
-        
+        dire = input('方向:')
+        if dire == '':
+            self.setback()
+            return 0
+        dire = int(dire)
+        if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
+                    self.p[self.opposite].locate[0] in range(loc[0] - ran, loc[0]))):
+                damage = 2
+        elif dire == 4:
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
+                    self.p[self.opposite].locate[1] in range(loc[1] - ran, loc[1]))):
+                damage = 2
+        elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+            if ((self.p[self.opposite].locate[1] == loc[1]) and (
+                    self.p[self.opposite].locate[0] in range(loc[0] + 1, loc[0] + ran+1))):
+                damage = 2
+        elif dire == 6:
+            if ((self.p[self.opposite].locate[0] == loc[0]) and (
+                    self.p[self.opposite].locate[1] in range(loc[1] + 1, loc[1] + ran+1))):
+                damage = 2
+        else:
+            self.setback()
+            return 0
+        oppoloc=list(self.p[self.opposite].locate)
+        if self.damagemake(damage,'hit'):
+            if ((dire == 2 and os.name=='posix')or(dire==8 and os.name=='nt')):
+                oppoloc[0] =0
+            elif dire == 4:
+                oppoloc[1] =0
+            elif ((dire == 8 and os.name=='posix')or(dire==2 and os.name=='nt')):
+                oppoloc[0] =6
+            elif dire == 6:
+                oppoloc[1] =6
+            self.p[self.opposite].locate=tuple(oppoloc)
+            print('咚。。。')
+            self.record.append(self.color[self.opposite]+self.p[self.opposite].name+'被击退因为')
+            
+        self.setback()
+        return 1
 game = Game()
 while not game.end:
     game.startstage()
