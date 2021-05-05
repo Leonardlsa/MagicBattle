@@ -90,7 +90,7 @@ class Game:
         self.end = False
         self.deck = []
         self.discard = []
-        self.record = []
+        self.record = [Back.LIGHTMAGENTA_EX+'开始']
         
         self.bannedcard = [20, 21,26,27]
         self.toolcard=[26,27]
@@ -100,17 +100,27 @@ class Game:
         while flag:
             print(Back.LIGHTWHITE_EX+Fore.BLACK+Style.DIM+'法术大乱斗')
             flag=False
-            inp=int(input('1.开始新的游戏\n2.继续以前的游戏\n3.查看存档列表\n4.清理存档\n'))
-            if inp==4:
+            inp=int(input('1.开始新的游戏\n2.继续以前的游戏\n3.查看存档列表\n4.清理存档\n5.退出'))
+            if inp==5:
+                exit()
+            elif inp==4:
                 rmname=input('你想要清除哪个存档？')
                 os.system('rm ./MagicFile/'+rmname+'sys.txt')
-                os.system('rm ./MagicFile/'+rmname+'pla.txt')
+                os.system('rm ./MagicFile/'+rmname+'pla0.txt')
+                os.system('rm ./MagicFile/'+rmname+'pla1.txt')
+                print('清除成功')
                 input()
                 print('\033c')
                 flag=True
                 continue
             elif inp==3:
-                os.system('cd MagicFile\nls')
+                filename=os.listdir('./MagicFile')
+                print('存档：')
+                for i in filename:
+                    l=len(i)
+                    if i[(l-7):]=='sys.txt':
+                        print(i[:(l-7)])
+                print('————————')
                 input()
                 print('\033c')
                 flag=True
