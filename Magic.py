@@ -3,6 +3,8 @@ from colorama import init,Back,Fore,Style
 import time
 import random
 import os
+import platform
+import re
 
 class card:
     def __init__(self, numb, name, attr, func,istramp):
@@ -28,7 +30,21 @@ class player:
 
 
 class Game:
+    def isanumber(self,instr):
+        numstr=re.compile('^[0-9]$')
+        return re.search(numstr,instr)
+    def isarangenumber(self,instr):
+        numstr=re.compile('^-?[0-3]$')
+        return re.search(numstr,instr)
     def __init__(self):
+        if not platform.architecture()[0]=='64bit':
+            print('该程序可能不适合在非64位机器上运行哦')
+            if not input('你确定还要继续运行吗')=='y':
+                exit()
+            else:
+                print('好吧，游戏体验不好可别怪我哦*罒▽罒*')
+                input()
+        print('\033c')
         print('欢迎来到《法术大乱斗》')
         print('创意来自传奇工作室')
         print('创新工作室出品')
@@ -100,7 +116,7 @@ class Game:
         while flag:
             print(Back.LIGHTWHITE_EX+Fore.BLACK+Style.DIM+'法术大乱斗')
             flag=False
-            inp=int(input('1.开始新的游戏\n2.继续以前的游戏\n3.查看存档列表\n4.清理存档\n5.退出'))
+            inp=int(input('1.开始新的游戏\n2.继续以前的游戏\n3.查看存档列表\n4.清理存档\n5.退出\n'))
             if inp==5:
                 exit()
             elif inp==4:
@@ -688,7 +704,7 @@ class Game:
         self.printboard()
         print('移动中...')
         dire = input('方向？')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -766,7 +782,7 @@ class Game:
         self.printboard()
         print('火球术！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -819,7 +835,7 @@ class Game:
 
         dire = input('方向:')
         dis = input('距离:')
-        if ((dire == '') | (dis == '')):
+        if not((self.isanumber(dire)) and (self.isanumber(dis))):
             self.setback()
             return 0
         dire, dis = int(dire), int(dis)
@@ -909,7 +925,7 @@ class Game:
         self.printboard()
         print('冰锥！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1019,7 +1035,7 @@ class Game:
         print('追踪导弹！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') and (not dy == '')):
+        if ((self.isarangenumder(dx)) and (self.isarangenumber(dy))):
             dx, dy = int(dx), int(dy)
             if ((dx in range(-3, 4)) and (dx in range(-3, 4))):
                 if ((loc[0] + dx, loc[1] + dy) == self.p[self.opposite].locate):
@@ -1051,7 +1067,7 @@ class Game:
         print('传送！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') and (not dy == '')):
+        if ((self.isarangenumber(dx)) and (self.isarangenumber(dy))):
             dx, dy = int(dx), int(dy)
             if ((dx in range(-3, 4)) and (dx in range(-3, 4))):
                 loc = list(loc)
@@ -1116,7 +1132,7 @@ class Game:
         print('地雷！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((not dx == '') and (not dy == '')):
+        if ((self.isarangenumber(dx)) and (self.isarangenumber(dy))):
             dx, dy = int(dx), int(dy)
             if not ((dx in range(-3, 4)) and (dy in range(-3, 4))):
                 self.setback()
@@ -1142,6 +1158,7 @@ class Game:
             else:
                 return 0
         else:
+            self.setback()
             return 0
 
     def infinitesword(self):
@@ -1172,7 +1189,7 @@ class Game:
         self.printboard()
         print('五连火球术！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1251,7 +1268,7 @@ class Game:
         self.printboard()
         print('冰刺！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1335,7 +1352,7 @@ class Game:
         self.printboard()
         print('风刃！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1381,7 +1398,7 @@ class Game:
         self.printboard()
         print('风刃！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1427,7 +1444,7 @@ class Game:
         self.printboard()
         print('风刃！')
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1486,7 +1503,7 @@ class Game:
         
         dire = input('方向:')
         dis = 1
-        if (dire == ''):
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
@@ -1587,7 +1604,7 @@ class Game:
         print('重拳出击！')
        
         dire = input('方向:')
-        if dire == '':
+        if not self.isanumber(dire):
             self.setback()
             return 0
         dire = int(dire)
