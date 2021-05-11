@@ -1035,7 +1035,7 @@ class Game:
         print('追踪导弹！')
         dx = input('输入增量行')
         dy = input('输入增量列')
-        if ((self.isarangenumder(dx)) and (self.isarangenumber(dy))):
+        if ((self.isarangenumber(dx)) and (self.isarangenumber(dy))):
             dx, dy = int(dx), int(dy)
             if ((dx in range(-3, 4)) and (dx in range(-3, 4))):
                 if ((loc[0] + dx, loc[1] + dy) == self.p[self.opposite].locate):
@@ -1589,6 +1589,7 @@ class Game:
             return 0
     def punchhard(self):
         loc = self.p[self.current].locate
+        damage=0
         ran=1
         for i in range(loc[0] - ran, loc[0] + ran+1):
             if i in range(0, 7):
